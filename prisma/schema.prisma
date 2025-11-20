@@ -1,0 +1,96 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../lib/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model Product {
+  id          String   @id @default(cuid())
+  name        String
+  description String?  
+  // STORED AS ATOMIC UNITS (6 DECIMALS)
+  // Example: $19.99 = 19990000
+  priceUsdc   BigInt   
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  soldUnits   Int      @default(0)
+  rating      Float    @default(0)
+   
+  orderItems  OrderItem[]
+  images      ProductImage[] 
+}
+
+model ProductImage {
+  id        String   @id @default(cuid())
+  url       String
+  altText   String?
+  productId String
+   
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+}
+
+model Order {
+  id          String      @id @default(cuid())
+  status      String      // e.g., "PENDING", "PAID", "FULFILLED"
+  
+  // STORED AS ATOMIC UNITS (6 DECIMALS)
+  totalAmount BigInt
+  
+  customerEmail String?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  items       OrderItem[]
+  payment     Payment?
+  payout      Payout?
+}
+
+model OrderItem {
+  id        String  @id @default(cuid())
+  quantity  Int
+  
+  // STORED AS ATOMIC UNITS (6 DECIMALS)
+  price     BigInt
+  
+  productId String
+  orderId   String
+   
+  product   Product @relation(fields: [productId], references: [id])
+  order     Order   @relation(fields: [orderId], references: [id])
+}
+
+model Payment {
+  id               String   @id @default(cuid())
+  muralPayinId     String?  @unique 
+  blockchainTxHash String? 
+  
+  // STORED AS ATOMIC UNITS (6 DECIMALS)
+  amount           BigInt
+  
+  currency         String   @default("USDC") 
+  status           String   
+  orderId          String   @unique
+
+  order            Order    @relation(fields: [orderId], references: [id])
+}
+
+model Payout {
+  id              String   @id @default(cuid())
+  muralPayoutId   String   @unique 
+  muralTransferId String?  
+  
+  // STORED AS ATOMIC UNITS (6 DECIMALS)
+  amountUSD       BigInt   
+  
+  // Stored as a string because COP doesn't follow the 6-decimal rule
+  // and is mostly for display/receipts.
+  amountCOP       String?  
+  
+  status          String   
+  orderId         String   @unique
+
+  order           Order    @relation(fields: [orderId], references: [id])
+}

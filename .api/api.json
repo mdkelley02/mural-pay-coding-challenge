@@ -1,0 +1,11 @@
+{
+  "version": "1.0",
+  "apis": [
+    {
+      "identifier": "mural-production",
+      "source": "@mural-production/v1.15#1hnmxxxjmhzeejif",
+      "integrity": "sha512-XIKw5pFRpu96hXVik6fwiu1eR7aR8tYVdxWDKd3C3Qw5lH6WYLZTOSGad+0ngGJ6Wr3Moo9Y1ZbFf+IcM6TLNQ==",
+      "installerVersion": "6.1.3"
+    }
+  ]
+}
