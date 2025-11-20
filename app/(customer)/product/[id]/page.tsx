@@ -1,5 +1,5 @@
-import { getProduct } from "@/app/actions/get-product";
 import ProductActions from "@/components/ProductActions";
+import { prisma } from "@/lib/prisma";
 import { cn, formatRating, formatUSDC } from "@/lib/utils";
 import { Star } from "lucide-react";
 import { notFound } from "next/navigation";
@@ -9,7 +9,14 @@ export default async function ProductPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const product = await getProduct(id);
+  const product = await prisma.product.findUnique({
+    where: {
+      id,
+    },
+    include: {
+      images: true,
+    },
+  });
   if (!product) {
     notFound();
   }
