@@ -28,3 +28,10 @@ export type CreateOrderResponse = {
 export type OrderDetails =
   | (Order & { items: (OrderItem & { product: Product })[] })
   | null;
+
+export type User = {
+  id: string;
+  email: string;
+  name: string;
+  role: "admin" | "user";
+};
