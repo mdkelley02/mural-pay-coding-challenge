@@ -31,9 +31,9 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <RootHeader />
-        <Separator />
         <Providers>
+          <RootHeader />
+          <Separator />
           <div className="p-4 max-w-7xl mx-auto">{children}</div>
           <Toaster position="top-right" />
         </Providers>

@@ -4,15 +4,17 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "npx prisma migrate deploy && next build",
     "start": "next start",
     "lint": "eslint",
+    "postinstall": "prisma generate",
     "init-mural-pay": "tsx scripts/init-mural-pay.ts",
     "seed-products": "tsx scripts/seed-products.ts"
   },
   "dependencies": {
     "@api/mural-production": "file:.api/apis/mural-production",
-    "@prisma/adapter-better-sqlite3": "^7.0.0",
+    "@neondatabase/serverless": "^1.0.2",
+    "@prisma/adapter-neon": "^7.0.0",
     "@prisma/client": "^7.0.0",
     "@radix-ui/react-select": "^2.2.6",
     "@radix-ui/react-separator": "^1.1.8",
@@ -38,6 +40,7 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@types/ws": "^8.18.1",
     "eslint": "^9",
     "eslint-config-next": "16.0.3",
     "prisma": "^7.0.0",

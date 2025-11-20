@@ -59,17 +59,11 @@ export default function CryptoCheckout({
       return;
     }
 
-    const args = [
-      MURAL_PAY_CONFIG.accountWalletAddress,
-      BigInt(amountAtomic),
-    ] as const;
-    console.log("args", args);
-
     writeContract({
       address: MURAL_PAY_CONFIG.usdcContractAddress,
       abi: USDC_ABI,
       functionName: "transfer",
-      args,
+      args: [MURAL_PAY_CONFIG.accountWalletAddress, BigInt(amountAtomic)],
     });
   };
 
