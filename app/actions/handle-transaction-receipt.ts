@@ -5,6 +5,8 @@ import { getUserIdFromSession } from "@/lib/auth";
 import muralPayClient from "@/lib/mural-pay";
 import { prisma } from "@/lib/prisma";
 
+const USDC_DECIMALS = 1_000_000n;
+
 export async function handleTransactionReceipt(
   orderId: string,
   blockchainTxHash: string
@@ -21,14 +23,13 @@ export async function handleTransactionReceipt(
     throw new Error("Order not found");
   }
 
-  // 5. Create Payout Request
   const createPayoutRequestResp = await muralPayClient.createPayoutRequest({
     sourceAccountId: MURAL_PAY_CONFIG.accountId,
     payouts: [
       {
         amount: {
           tokenSymbol: "USDC",
-          tokenAmount: Number(order.totalAmountUsdc),
+          tokenAmount: Number(order.totalAmountUsdc / USDC_DECIMALS),
         },
         recipientInfo: {
           type: "counterpartyInfo",
