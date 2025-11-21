@@ -21,36 +21,45 @@ export async function handleTransactionReceipt(
     throw new Error("Order not found");
   }
 
-  const createPayoutRequestResp = await muralPayClient.createPayoutRequest({
-    sourceAccountId: MURAL_PAY_CONFIG.accountId,
-    payouts: [
-      {
-        amount: {
-          tokenSymbol: "USDC",
-          tokenAmount: Number(order.totalAmountUsdc) / 1_000_000,
+  try {
+    const createPayoutRequestResp = await muralPayClient.createPayoutRequest({
+      sourceAccountId: MURAL_PAY_CONFIG.accountId,
+      payouts: [
+        {
+          amount: {
+            tokenSymbol: "USDC",
+            tokenAmount: Number(order.totalAmountUsdc) / 1_000_000,
+          },
+          recipientInfo: {
+            type: "counterpartyInfo",
+            counterpartyId: MURAL_PAY_CONFIG.counterpartyId,
+          },
+          payoutDetails: {
+            type: "counterpartyPayoutMethod",
+            payoutMethodId: MURAL_PAY_CONFIG.counterpartyPayoutMethodId,
+          },
         },
-        recipientInfo: {
-          type: "counterpartyInfo",
-          counterpartyId: MURAL_PAY_CONFIG.counterpartyId,
-        },
-        payoutDetails: {
-          type: "counterpartyPayoutMethod",
-          payoutMethodId: MURAL_PAY_CONFIG.counterpartyPayoutMethodId,
-        },
+      ],
+    });
+
+    if (createPayoutRequestResp.data.payouts.length === 0) {
+      throw new Error("No payouts created");
+    }
+
+    await prisma.order.update({
+      where: { id: orderId, userId },
+      data: {
+        blockchainTxHash,
+        muralPayPayoutRequestId: createPayoutRequestResp.data.id,
+        muralPayPayoutId: createPayoutRequestResp.data.payouts[0].id,
       },
-    ],
-  });
-
-  if (createPayoutRequestResp.data.payouts.length === 0) {
-    throw new Error("No payouts created");
+    });
+  } catch (error) {
+    console.error(
+      `Failed to handle transaction receipt for order ${orderId}, error: ${JSON.stringify(
+        error
+      )}`
+    );
+    throw new Error(`Failed to create payout request on order ${orderId}`);
   }
-
-  await prisma.order.update({
-    where: { id: orderId, userId },
-    data: {
-      blockchainTxHash,
-      muralPayPayoutRequestId: createPayoutRequestResp.data.id,
-      muralPayPayoutId: createPayoutRequestResp.data.payouts[0].id,
-    },
-  });
 }
