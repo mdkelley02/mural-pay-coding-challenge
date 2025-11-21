@@ -5,8 +5,6 @@ import { getUserIdFromSession } from "@/lib/auth";
 import muralPayClient from "@/lib/mural-pay";
 import { prisma } from "@/lib/prisma";
 
-const USDC_DECIMALS = 1_000_000n;
-
 export async function handleTransactionReceipt(
   orderId: string,
   blockchainTxHash: string
@@ -29,7 +27,7 @@ export async function handleTransactionReceipt(
       {
         amount: {
           tokenSymbol: "USDC",
-          tokenAmount: Number(order.totalAmountUsdc / USDC_DECIMALS),
+          tokenAmount: Number(order.totalAmountUsdc) / 1_000_000,
         },
         recipientInfo: {
           type: "counterpartyInfo",

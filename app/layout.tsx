@@ -35,7 +35,7 @@ export default function RootLayout({
           <RootHeader />
           <Separator />
           <div className="p-4 max-w-7xl mx-auto">{children}</div>
-          <Toaster position="top-right" />
+          <Toaster />
         </Providers>
       </body>
     </html>

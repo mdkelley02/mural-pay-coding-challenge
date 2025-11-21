@@ -44,29 +44,30 @@ export async function POST(request: NextRequest) {
 async function handleAccountCreditedEvent(
   body: z.infer<typeof accountCreditedSchema>
 ): Promise<NextResponse> {
-  const blockchainTxHash = body.payload.transactionDetails.transactionHash;
-  const receivedAmountUsdc = BigInt(body.payload.tokenAmount.tokenAmount);
-
   // Find the order by the blockchain transaction hash
+  const blockchainTxHash = body.payload.transactionDetails.transactionHash;
   const order = await prisma.order.findFirst({
-    where: {
-      blockchainTxHash: blockchainTxHash,
-    },
+    where: { blockchainTxHash },
   });
   if (order == null) {
     console.error(`Order not found for hash: ${blockchainTxHash}`);
     return NextResponse.json({ message: "Order not found" }, { status: 404 });
-  } else if (!order.muralPayPayoutRequestId) {
-    console.error(`Payout request not found for Order #${order.id}`);
-    return NextResponse.json(
-      { message: "Payout request not found" },
-      { status: 404 }
-    );
   } else if (order.status === "PAID") {
     return NextResponse.json({ message: "Already processed" }, { status: 200 });
-  } else if (order.totalAmountUsdc !== receivedAmountUsdc) {
+  }
+
+  if (!order.muralPayPayoutRequestId) {
+    console.error(`Payout request ID not found for Order #${order.id}`);
+    return NextResponse.json(
+      { message: "Payout request ID not found" },
+      { status: 404 }
+    );
+  }
+
+  const orderTotalAmountUsdc = Number(order.totalAmountUsdc) / 1_000_000;
+  if (orderTotalAmountUsdc !== body.payload.tokenAmount.tokenAmount) {
     console.error(
-      `Amount mismatch for Order #${order.id}. Expected: ${order.totalAmountUsdc}, Received: ${receivedAmountUsdc}`
+      `Amount mismatch for Order #${order.id}. Expected: ${orderTotalAmountUsdc}, Received: ${body.payload.tokenAmount.tokenAmount}`
     );
 
     await prisma.order.update({

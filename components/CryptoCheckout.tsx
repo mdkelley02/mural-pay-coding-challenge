@@ -12,6 +12,7 @@ import {
   useConnect,
   useSwitchChain,
   useWaitForTransactionReceipt,
+  useWalletClient,
   useWriteContract,
 } from "wagmi";
 import { polygonAmoy } from "wagmi/chains";
@@ -36,6 +37,26 @@ export default function CryptoCheckout({
   const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({
     hash,
   });
+  const { data: walletClient } = useWalletClient();
+
+  const addTokenToWallet = async () => {
+    if (!walletClient) return;
+    try {
+      await walletClient.watchAsset({
+        type: "ERC20",
+        options: {
+          address: MURAL_PAY_CONFIG.usdcContractAddress,
+          symbol: "USDC",
+          decimals: 6, // Important: USDC usually has 6 decimals
+          image: "https://cryptologos.cc/logos/usd-coin-usdc-logo.png?v=026", // Optional: Adds the logo
+        },
+      });
+      toast.success("USDC added to wallet!");
+    } catch (e) {
+      console.error(e);
+      toast.error("Failed to add token");
+    }
+  };
 
   useEffect(() => {
     if (!isSuccess || !hash) {
@@ -63,6 +84,8 @@ export default function CryptoCheckout({
       switchChain({ chainId: polygonAmoy.id });
       return;
     }
+
+    addTokenToWallet();
 
     writeContract({
       address: MURAL_PAY_CONFIG.usdcContractAddress,
