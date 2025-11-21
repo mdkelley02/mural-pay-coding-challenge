@@ -42,7 +42,9 @@ export default function OrdersTable({ orders }: { orders: Order[] }) {
                 minute: "numeric",
               })}
             </TableCell>
-            <TableCell>{formatUSDC(order.totalAmount)}</TableCell>
+            <TableCell>
+              {formatUSDC(order.totalAmountUsdc.toString())}
+            </TableCell>
             <TableCell>
               <Badge variant="outline">{order.status}</Badge>
             </TableCell>
