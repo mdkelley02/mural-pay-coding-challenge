@@ -1,7 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  serverExternalPackages: ["@api/mural-production", "oas", "es5-ext"],
 };
 
 export default nextConfig;
