@@ -43,7 +43,7 @@ export default function OrdersTable({ orders }: { orders: Order[] }) {
               })}
             </TableCell>
             <TableCell>
-              {formatUSDC(order.totalAmountUsdc.toString())}
+              {formatUSDC(order.totalAmountUsdc.toString())} USDC
             </TableCell>
             <TableCell>
               <Badge variant="outline">{order.status}</Badge>

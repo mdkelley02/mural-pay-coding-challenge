@@ -64,7 +64,7 @@ export default async function ProductPage({
           </div>
 
           <div className="text-xl font-bold">
-            {formatUSDC(product.priceUsdc)}
+            {formatUSDC(product.priceUsdc)} USDC
           </div>
 
           <ProductActions product={product} />

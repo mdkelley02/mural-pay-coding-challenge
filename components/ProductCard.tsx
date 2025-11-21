@@ -29,7 +29,7 @@ export default function ProductCard({
             </span>
           </div>
           <div className="text-lg font-bold">
-            {formatUSDC(product.priceUsdc)}
+            {formatUSDC(product.priceUsdc)} USDC
           </div>
         </div>
       </div>

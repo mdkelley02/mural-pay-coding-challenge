@@ -51,7 +51,7 @@ export default function CartDetails() {
                 <span className="text-sm font-bold">{item.product.name}</span>
                 <div className="text-sm flex items-center gap-2">
                   <span className="font-semibold">
-                    {formatUSDC(item.product.priceUsdc)}
+                    {formatUSDC(item.product.priceUsdc)} USDC
                   </span>
                   <span className="text-muted-foreground">Per Item</span>
                 </div>
