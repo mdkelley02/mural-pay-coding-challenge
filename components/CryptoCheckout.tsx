@@ -1,6 +1,6 @@
 "use client";
 
-import { setTxHash } from "@/app/actions/set-tx-hash";
+import { handleTransactionReceipt } from "@/app/actions/handle-transaction-receipt";
 import { Button } from "@/components/ui/button";
 import { MURAL_PAY_CONFIG } from "@/config/mural-pay";
 import { useRouter } from "next/navigation";
@@ -42,8 +42,13 @@ export default function CryptoCheckout({
       return;
     }
 
-    setTxHash(orderId, hash);
-    router.refresh();
+    handleTransactionReceipt(orderId, hash)
+      .then(() => {
+        router.refresh();
+      })
+      .catch((error) => {
+        toast.error(`${error}`);
+      });
   }, [isSuccess, hash, orderId, router]);
 
   useEffect(() => {

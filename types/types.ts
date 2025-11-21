@@ -13,8 +13,6 @@ export type CartItem = {
 };
 
 export type CreateOrderPayload = {
-  customerEmail: string;
-  customerWalletAddress: string;
   items: {
     quantity: number;
     productId: string;

@@ -1,8 +1,12 @@
 import OrdersTable from "@/components/OrdersTable";
 import ProductCard from "@/components/ProductCard";
 import ProductHero from "@/components/ProductHero";
+import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { getServerSession } from "next-auth";
 export default async function ProductsPage() {
+  const session = await getServerSession(authOptions);
+
   const products = await prisma.product.findMany({
     include: {
       images: true,
@@ -10,6 +14,9 @@ export default async function ProductsPage() {
   });
 
   const orders = await prisma.order.findMany({
+    where: {
+      userId: session?.user.id,
+    },
     orderBy: {
       createdAt: "desc",
     },

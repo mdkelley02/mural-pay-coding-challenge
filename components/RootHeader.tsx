@@ -3,13 +3,22 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import useCartStore from "@/store/cart-store";
-import useUserStore from "@/store/user-store";
 import { LayoutDashboard, ShoppingCartIcon, Shrimp } from "lucide-react";
+import { signOut, useSession } from "next-auth/react";
 import Link from "next/link";
 
 export default function RootHeader() {
-  const userStore = useUserStore();
   const cartStore = useCartStore();
+
+  const { data: session, status } = useSession();
+  if (session == null || status !== "authenticated") {
+    return null;
+  }
+
+  const handleLogout = async () => {
+    cartStore.clearCart();
+    await signOut({ callbackUrl: "/auth/sign-in" });
+  };
 
   return (
     <div className="px-4 py-2 max-w-7xl mx-auto flex justify-between items-center">
@@ -23,17 +32,9 @@ export default function RootHeader() {
       </div>
 
       <div className="flex items-center gap-2">
-        {userStore.user == null && (
-          <>
-            <Button variant="link" size="sm" onClick={userStore.login}>
-              Sign Up
-            </Button>
-
-            <Button variant="link" size="sm" onClick={userStore.login}>
-              Login
-            </Button>
-          </>
-        )}
+        <div className="text-sm text-muted-foreground">
+          {session.user.email}
+        </div>
 
         <Link href="/checkout">
           <Button variant="outline" size="sm" className="relative">
@@ -46,19 +47,21 @@ export default function RootHeader() {
           </Button>
         </Link>
 
-        {userStore.user != null && (
-          <>
-            <Link href="/dashboard">
-              <Button variant="outline" size="sm">
-                <LayoutDashboard />
-              </Button>
-            </Link>
-
-            <Button variant="link" size="sm" onClick={userStore.logout}>
-              <span>Logout</span>
+        {session.user.role === "ADMIN" && (
+          <Link href="/dashboard">
+            <Button variant="outline" size="sm">
+              <LayoutDashboard />
             </Button>
-          </>
+          </Link>
         )}
+
+        <Button
+          variant="link"
+          size="sm"
+          onClick={() => signOut({ callbackUrl: "/auth/sign-in" })}
+        >
+          <span>Logout</span>
+        </Button>
       </div>
     </div>
   );

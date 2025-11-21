@@ -21,7 +21,7 @@ export default function CartDetails() {
           variant="link"
           className="text-destructive"
           disabled={cartStore.items.length === 0}
-          onClick={() => cartStore.clearCart()}
+          onClick={() => cartStore.clearCart(true)}
         >
           <TrashIcon className="size-4" />
           Remove All

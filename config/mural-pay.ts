@@ -1,9 +1,10 @@
 export const MURAL_PAY_CONFIG = {
   counterpartyId: process.env.MURAL_PAY_COUNTERPARTY_ID ?? "",
   organizationId: process.env.MURAL_PAY_ORGANIZATION_ID ?? "",
-  payoutMethodId: process.env.MURAL_PAY_PAYOUT_METHOD_ID ?? "",
+  counterpartyPayoutMethodId: process.env.MURAL_PAY_PAYOUT_METHOD_ID ?? "",
   accountId: process.env.MURAL_PAY_ACCOUNT_ID ?? "",
   apiKey: process.env.MURAL_PAY_API_KEY ?? "",
+  transferApiKey: process.env.MURAL_PAY_TRANSFER_API_KEY ?? "",
   baseUrl: process.env.MURAL_PAY_BASE_URL ?? "",
   webhookKey: {
     key: process.env.MURAL_PAY_WEBHOOK_PUBLIC_KEY ?? "",

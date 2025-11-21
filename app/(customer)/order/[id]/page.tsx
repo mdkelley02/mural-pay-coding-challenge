@@ -2,8 +2,9 @@ import CartDetailsTable from "@/components/CartDetailsTable";
 import CryptoCheckout from "@/components/CryptoCheckout";
 import OrderStatusBadge from "@/components/OrderStatusBadge";
 import { Separator } from "@/components/ui/separator";
+import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { OrderDetails } from "@/types/types";
+import { getServerSession } from "next-auth";
 import { notFound } from "next/navigation";
 export default async function OrderPage({
   params,
@@ -11,13 +12,13 @@ export default async function OrderPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const order: OrderDetails | null = await prisma.order.findUnique({
+  const session = await getServerSession(authOptions);
+  const order = await prisma.order.findUnique({
     where: {
       id,
+      userId: session?.user.id,
     },
     include: {
-      payment: true,
-      payout: true,
       items: {
         include: {
           product: {
@@ -50,7 +51,7 @@ export default async function OrderPage({
         <CartDetailsTable order={order} />
         <div className="flex items-center justify-end">
           <CryptoCheckout
-            amountAtomic={order.totalAmount.toString()}
+            amountAtomic={order.totalAmountUsdc.toString()}
             orderId={order.id}
           />
         </div>

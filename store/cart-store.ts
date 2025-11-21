@@ -8,7 +8,7 @@ interface CartSate {
   addToCart: (product: Product) => void;
   removeFromCart: (productId: string) => void;
   updateQuantity: (amount: number, productId: string) => void;
-  clearCart: () => void;
+  clearCart: (notify?: boolean) => void;
 }
 
 export default create<CartSate>()(
@@ -56,11 +56,13 @@ export default create<CartSate>()(
           });
         }
       },
-      clearCart: () => {
+      clearCart: (notify: boolean = false) => {
         set({
           items: [],
         });
-        toast.success("Cart cleared");
+        if (notify) {
+          toast.success("Cart cleared");
+        }
       },
     }),
     {
