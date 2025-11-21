@@ -13,19 +13,21 @@ export async function POST(request: NextRequest) {
     const signature = request.headers.get("x-mural-webhook-signature") ?? "";
     const timestamp = request.headers.get("x-mural-webhook-timestamp") ?? "";
     if (!signature || !timestamp) {
+      console.error("Missing headers", signature, timestamp);
       return NextResponse.json({ error: "Missing headers" }, { status: 401 });
     }
 
     const body = await request.json();
-
-    console.log("received webhook", body);
+    console.log("received webhook", JSON.stringify(body, null, 2));
 
     if (!isWebhookSignatureValid(JSON.stringify(body), signature, timestamp)) {
+      console.error("Invalid signature", signature, timestamp);
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const parsedBody = accountCreditedSchema.safeParse(body);
     if (!parsedBody.success) {
+      console.error("Invalid schema", parsedBody.error);
       return NextResponse.json({ error: "Invalid schema" }, { status: 400 });
     }
 
@@ -45,36 +47,26 @@ async function handleAccountCreditedEvent(
   const blockchainTxHash = body.payload.transactionDetails.transactionHash;
   const receivedAmountUsdc = BigInt(body.payload.tokenAmount.tokenAmount);
 
-  // 1. Find the order by the blockchain transaction hash
+  // Find the order by the blockchain transaction hash
   const order = await prisma.order.findFirst({
     where: {
       blockchainTxHash: blockchainTxHash,
     },
   });
-  if (!order) {
-    console.error(
-      `[Webhook Failed] Order not found for hash: ${blockchainTxHash}`
-    );
+  if (order == null) {
+    console.error(`Order not found for hash: ${blockchainTxHash}`);
+    return NextResponse.json({ message: "Order not found" }, { status: 404 });
+  } else if (!order.muralPayPayoutRequestId) {
+    console.error(`Payout request not found for Order #${order.id}`);
     return NextResponse.json(
-      { message: "Order not found, ignored" },
-      { status: 200 }
-    );
-  } else if (!order.muralPayPayoutId) {
-    // If the payout request is not found
-    console.error(
-      `[Webhook Failed] Payout request not found for Order #${order.id}`
-    );
-    return NextResponse.json(
-      { message: "Payout request not found, ignored" },
-      { status: 200 }
+      { message: "Payout request not found" },
+      { status: 404 }
     );
   } else if (order.status === "PAID") {
-    // If we already paid this
     return NextResponse.json({ message: "Already processed" }, { status: 200 });
   } else if (order.totalAmountUsdc !== receivedAmountUsdc) {
-    // If the amount mismatch, update the order status to PAYMENT_MISMATCH
     console.error(
-      `[Webhook Failed] Amount mismatch for Order #${order.id}. Expected: ${order.totalAmountUsdc}, Received: ${receivedAmountUsdc}`
+      `Amount mismatch for Order #${order.id}. Expected: ${order.totalAmountUsdc}, Received: ${receivedAmountUsdc}`
     );
 
     await prisma.order.update({
@@ -82,49 +74,33 @@ async function handleAccountCreditedEvent(
       data: { status: "PAYMENT_MISMATCH" },
     });
 
-    return NextResponse.json(
-      { message: "Amount mismatch, updating order status to PAYMENT_MISMATCH" },
-      { status: 200 }
-    );
+    return NextResponse.json({ message: "Amount mismatch" }, { status: 200 });
   }
 
-  try {
-    // 2. Execute the payout request
-    const executePayoutRequestResp = await muralPayClient.executePayoutRequest(
-      {},
-      {
-        id: order.muralPayPayoutId,
-        "on-behalf-of": MURAL_PAY_CONFIG.organizationId,
-        "transfer-api-key": MURAL_PAY_CONFIG.transferApiKey,
-      }
-    );
+  // Execute the payout request
+  const executePayoutRequestResp = await muralPayClient.executePayoutRequest(
+    {},
+    {
+      id: order.muralPayPayoutRequestId,
+      "on-behalf-of": MURAL_PAY_CONFIG.organizationId,
+      "transfer-api-key": MURAL_PAY_CONFIG.transferApiKey,
+    }
+  );
 
-    // Note: This type is unknown
-    const fiatAmountDetails = executePayoutRequestResp.data.payouts[0].details
-      .fiatAmount as unknown as {
-      fiatAmount: number;
-    };
+  const fiatAmountDetails = executePayoutRequestResp.data.payouts[0].details
+    .fiatAmount as unknown as {
+    fiatAmount: number;
+  };
 
-    // 3. Update the order status to PAID
-    await prisma.order.update({
-      where: { id: order.id },
-      data: {
-        status: "PAID",
-        payoutStatus: executePayoutRequestResp.data.status,
-        payoutAmountUsd: fiatAmountDetails.fiatAmount,
-      },
-    });
-  } catch (error) {
-    // If the payout request fails, update the order status to PENDING
-    console.error("Payout API failed", error);
-
-    await prisma.order.update({
-      where: { id: order.id },
-      data: { status: "PENDING" },
-    });
-
-    throw error;
-  }
+  // Update the order status to PAID
+  await prisma.order.update({
+    where: { id: order.id },
+    data: {
+      status: "PAID",
+      payoutStatus: executePayoutRequestResp.data.status,
+      payoutAmountUsd: fiatAmountDetails.fiatAmount,
+    },
+  });
 
   return NextResponse.json({ message: "Ok" }, { status: 200 });
 }
